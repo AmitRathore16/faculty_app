@@ -5,7 +5,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/services/api_service.dart';
 import '../../../shared/models/educator_model.dart';
 import '../../../shared/models/course_model.dart';
-import '../../../shared/models/test_series_model.dart';
 import '../../../shared/widgets/shimmer_widgets.dart';
 import '../../../shared/widgets/state_widgets.dart';
 import '../../../shared/widgets/user_widgets.dart';
@@ -79,7 +78,7 @@ class EducatorProfileScreen extends ConsumerWidget {
           leading: IconButton(
             icon: Container(
               padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Colors.black26,
                 shape: BoxShape.circle,
               ),
@@ -91,7 +90,7 @@ class EducatorProfileScreen extends ConsumerWidget {
             IconButton(
               icon: Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.black26,
                   shape: BoxShape.circle,
                 ),
@@ -174,7 +173,7 @@ class EducatorProfileScreen extends ConsumerWidget {
 
   Widget _buildProfileHeader(BuildContext context, Educator educator) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [AppColors.primary, AppColors.primaryDark],
           begin: Alignment.topCenter,
@@ -270,7 +269,7 @@ class EducatorProfileScreen extends ConsumerWidget {
         const SizedBox(height: 4),
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 12,
             color: AppColors.grey600,
           ),
@@ -310,7 +309,7 @@ class EducatorProfileScreen extends ConsumerWidget {
                 if (qual.institution != null)
                   Text(
                     qual.institution!,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.grey600,
                     ),
@@ -321,7 +320,7 @@ class EducatorProfileScreen extends ConsumerWidget {
           if (qual.year != null)
             Text(
               qual.year!,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
                 color: AppColors.grey500,
               ),
@@ -339,13 +338,13 @@ class EducatorProfileScreen extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
-            children: List.generate(3, (_) => const ShimmerCard(height: 120)),
+            children: List.generate(3, (_) => const ShimmerCard()),
           ),
         ),
       ),
-      error: (error, stack) => SliverToBoxAdapter(
+      error: (error, stack) => const SliverToBoxAdapter(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16),
           child: Text('Failed to load courses'),
         ),
       ),
@@ -438,7 +437,7 @@ class _CourseCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       course.subject.join(', '),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.primary,
                       ),

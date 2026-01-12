@@ -58,29 +58,36 @@ class ShimmerCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppShimmer(
-            height: height * 0.5,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const AppShimmer(height: 16, width: double.infinity),
-                const SizedBox(height: 8),
-                AppShimmer(height: 12, width: MediaQuery.of(context).size.width * 0.6),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    const AppShimmer(height: 24, width: 24, borderRadius: BorderRadius.all(Radius.circular(12))),
-                    const SizedBox(width: 8),
-                    Expanded(child: AppShimmer(height: 12, width: MediaQuery.of(context).size.width * 0.3)),
-                  ],
-                ),
-              ],
+          const Flexible(
+            child: AppShimmer(
+              height: double.infinity,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
             ),
           ),
+          Flexible(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const AppShimmer(height: 16, width: double.infinity),
+                  const SizedBox(height: 8),
+                  AppShimmer(height: 12, width: MediaQuery.of(context).size.width * 0.6),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const AppShimmer(height: 24, width: 24, borderRadius: BorderRadius.all(Radius.circular(12))),
+                      const SizedBox(width: 8),
+                      Expanded(child: AppShimmer(height: 12, width: MediaQuery.of(context).size.width * 0.3)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
         ],
       ),
     );
@@ -127,11 +134,12 @@ class ShimmerList extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       const AppShimmer(height: 14, width: double.infinity),
                       const SizedBox(height: 8),
                       AppShimmer(height: 12, width: MediaQuery.of(context).size.width * 0.4),
-                      const Spacer(),
+                      const SizedBox(height: 10,),
                       AppShimmer(height: 10, width: MediaQuery.of(context).size.width * 0.3),
                     ],
                   ),

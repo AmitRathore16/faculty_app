@@ -3,10 +3,11 @@ class AppConfig {
   
   static const String appName = 'Faculty Pedia';
   static const String appVersion = '1.0.0';
-  
+
   // API Configuration
+  static const String baseUrl = 'https://faculty-server-h5i1.onrender.com';
   static const String baseUrl1 = 'https://faculty-pedia-backend.onrender.com';
-  static const String baseUrl = 'http://localhost:5001';
+  static const String baseUrl2 = 'http://localhost:5001';
   static const String apiPrefix = '/api';
   
   // Timeouts

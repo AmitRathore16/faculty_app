@@ -32,6 +32,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _emailController.text.trim(),
       _passwordController.text,
     );
+
     if (success && mounted) {
       context.go('/home');
     }

@@ -9,20 +9,30 @@ import '../../../shared/widgets/state_widgets.dart';
 import '../../../shared/widgets/user_widgets.dart';
 
 // Educators Provider
+import 'dart:convert';
+
 final educatorsProvider = FutureProvider.autoDispose<List<Educator>>((ref) async {
   final api = ApiService();
   final response = await api.get('/api/educators');
-  final data = response.data;
-  
-  List<dynamic> educatorsList = [];
-  if (data is Map && data['educators'] != null) {
-    educatorsList = data['educators'] as List;
-  } else if (data is List) {
-    educatorsList = data;
+
+  dynamic data = response.data;
+
+  // ✅ IMPORTANT FIX: decode if backend response is a JSON string
+  if (data is String) {
+    data = jsonDecode(data);
   }
-  
+
+  List<dynamic> educatorsList = [];
+
+  if (data is Map &&
+      data['data'] is Map &&
+      data['data']['educators'] is List) {
+    educatorsList = data['data']['educators'] as List;
+  }
+
   return educatorsList.map((e) => Educator.fromJson(e)).toList();
 });
+
 
 class EducatorsScreen extends ConsumerWidget {
   const EducatorsScreen({super.key});

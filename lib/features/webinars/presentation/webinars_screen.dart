@@ -16,14 +16,27 @@ final webinarsProvider = FutureProvider.autoDispose<List<Webinar>>((ref) async {
   final data = response.data;
 
   List<dynamic> webinarsList = [];
-  if (data is Map && data['webinars'] != null) {
+
+  // ✅ backend: { success, message, data: { webinars: [] } }
+  if (data is Map &&
+      data['data'] is Map &&
+      data['data']['webinars'] is List) {
+    webinarsList = data['data']['webinars'] as List;
+  }
+  // ✅ fallback: { webinars: [] }
+  else if (data is Map && data['webinars'] is List) {
     webinarsList = data['webinars'] as List;
-  } else if (data is List) {
+  }
+  // ✅ fallback: []
+  else if (data is List) {
     webinarsList = data;
   }
 
+  debugPrint("✅ webinars found = ${webinarsList.length}");
+
   return webinarsList.map((e) => Webinar.fromJson(e)).toList();
 });
+
 
 class WebinarsScreen extends ConsumerWidget {
   const WebinarsScreen({super.key});

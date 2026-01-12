@@ -74,7 +74,7 @@ class ProfileScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      authState.userRole?.toUpperCase() ?? 'USER',
+                      (user.username?.isNotEmpty ?? false) ? user.username! : 'USER',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,

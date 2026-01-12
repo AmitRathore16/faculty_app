@@ -9,20 +9,25 @@ import '../../../shared/widgets/state_widgets.dart';
 import '../../../shared/widgets/user_widgets.dart';
 
 // Webinar Detail Provider
-final webinarDetailProvider = FutureProvider.family.autoDispose<Webinar, String>((ref, id) async {
+final webinarDetailProvider =
+FutureProvider.family.autoDispose<Webinar, String>((ref, id) async {
   final api = ApiService();
   final response = await api.get('/api/webinars/$id');
-  final data = response.data;
-  
-  Map<String, dynamic> webinarData = {};
-  if (data is Map && data['webinar'] != null) {
-    webinarData = data['webinar'];
-  } else if (data is Map) {
-    webinarData = Map<String, dynamic>.from(data);
+
+  final raw = response.data;
+
+  if (raw is Map && raw['data'] is Map<String, dynamic>) {
+    return Webinar.fromJson(Map<String, dynamic>.from(raw['data']));
   }
-  
-  return Webinar.fromJson(webinarData);
+
+  // fallback (in case backend returns direct object someday)
+  if (raw is Map<String, dynamic>) {
+    return Webinar.fromJson(raw);
+  }
+
+  throw Exception("Invalid webinar response");
 });
+
 
 class WebinarDetailsScreen extends ConsumerWidget {
   final String webinarId;

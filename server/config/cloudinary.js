@@ -78,7 +78,7 @@ const dynamicStorage = new CloudinaryStorage({
 
     return {
       folder,
-      allowed_formats: ["jpg", "jpeg", "png", "webp"],
+      allowed_formats: ["jpg", "jpeg", "png", "webp", "heic", "heif"],
       transformation,
     };
   },
@@ -87,7 +87,7 @@ const dynamicStorage = new CloudinaryStorage({
 export const uploadGenericImage = multer({
   storage: dynamicStorage,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5 MB
+    fileSize: 50 * 1024 * 1024, // 5 MB
   },
 });
 

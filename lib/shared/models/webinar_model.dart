@@ -68,10 +68,16 @@ class Webinar {
       educatorImage: _parseEducatorImage(json),
       fees: (json['fees'] as num?)?.toDouble(),
       isFree: json['isFree'] ?? (json['fees'] == 0),
-      scheduledAt: json['scheduledAt'] != null 
-          ? DateTime.tryParse(json['scheduledAt']) 
-          : (json['startTime'] != null ? DateTime.tryParse(json['startTime']) : null),
-      duration: json['duration'],
+      scheduledAt: json['scheduledAt'] != null
+          ? DateTime.tryParse(json['scheduledAt'])
+          : (json['timing'] != null
+          ? DateTime.tryParse(json['timing'])
+          : (json['startTime'] != null ? DateTime.tryParse(json['startTime']) : null)),
+
+      duration: json['duration'] is int
+          ? json['duration']
+          : int.tryParse(json['duration']?.toString() ?? ''),
+
       meetingLink: json['meetingLink'] ?? json['link'],
       maxAttendees: json['maxAttendees'],
       registeredCount: json['registeredCount'] ?? json['attendees'],
@@ -89,14 +95,16 @@ class Webinar {
     }
     return [];
   }
-  
+
   static String? _parseEducatorId(Map<String, dynamic> json) {
-    final educator = json['educatorId'] ?? json['educatorID'] ?? json['educator'];
+    final educator =
+        json['educatorId'] ?? json['educatorID'] ?? json['educator'] ?? json['educatorID'];
     if (educator is String) return educator;
     if (educator is Map) return educator['_id']?.toString();
-    return null;
+    return json['educatorID']?.toString(); // ✅ backend uses educatorID
   }
-  
+
+
   static String? _parseEducatorName(Map<String, dynamic> json) {
     final educator = json['educatorId'] ?? json['educatorID'] ?? json['educator'];
     if (educator is Map) {
