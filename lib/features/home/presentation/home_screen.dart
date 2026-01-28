@@ -43,10 +43,9 @@ class HomeScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {
-              // TODO: Show notifications
-            },
+            onPressed: () => context.push('/notifications'),
           ),
+
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () => context.push('/settings'),
@@ -194,55 +193,55 @@ class HomeScreen extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          height: 120,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            itemCount: exams.length,
-            itemBuilder: (context, index) {
-              final exam = exams[index];
-              return GestureDetector(
-                onTap: () => context.push(exam['route'] as String),
-                child: Container(
-                  width: 110,
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  decoration: BoxDecoration(
-                    color: (exam['color'] as Color).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: (exam['color'] as Color).withOpacity(0.3),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center, // ✅ CENTER
+            children: exams.map((exam) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: GestureDetector(
+                  onTap: () => context.push(exam['route'] as String),
+                  child: Container(
+                    width: 110,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: (exam['color'] as Color).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: (exam['color'] as Color).withOpacity(0.3),
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: exam['color'] as Color,
-                          shape: BoxShape.circle,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: exam['color'] as Color,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            exam['icon'] as IconData,
+                            color: Colors.white,
+                            size: 24,
+                          ),
                         ),
-                        child: Icon(
-                          exam['icon'] as IconData,
-                          color: Colors.white,
-                          size: 24,
+                        const SizedBox(height: 10),
+                        Text(
+                          exam['name'] as String,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: exam['color'] as Color,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        exam['name'] as String,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: exam['color'] as Color,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               );
-            },
+            }).toList(),
           ),
         ),
       ],
@@ -331,30 +330,33 @@ class HomeScreen extends ConsumerWidget {
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildActionCard(
-                  context,
-                  icon: Icons.play_circle_fill,
-                  title: 'Start Learning',
-                  subtitle: 'Browse courses',
-                  color: AppColors.primary,
-                  onTap: () => context.push('/courses'),
+
+          IntrinsicHeight( // ✅ makes both children match tallest height
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildActionCard(
+                    context,
+                    icon: Icons.play_circle_fill,
+                    title: 'Start Learning',
+                    subtitle: 'Browse courses',
+                    color: AppColors.primary,
+                    onTap: () => context.push('/courses'),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildActionCard(
-                  context,
-                  icon: Icons.assignment,
-                  title: 'Take Test',
-                  subtitle: 'Practice now',
-                  color: AppColors.secondary,
-                  onTap: () => context.push('/test-series'),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildActionCard(
+                    context,
+                    icon: Icons.assignment,
+                    title: 'Take Test',
+                    subtitle: 'Practice now',
+                    color: AppColors.secondary,
+                    onTap: () => context.push('/test-series'),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -372,6 +374,7 @@ class HomeScreen extends ConsumerWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        height: double.infinity, // ✅ important
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -388,38 +391,45 @@ class HomeScreen extends ConsumerWidget {
             ),
           ],
         ),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.white, size: 32),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+        child: Center(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center, // ✅ IMPORTANT
+
+            children: [
+              Icon(icon, color: Colors.white, size: 32),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min, // ✅ IMPORTANT
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
-                      fontSize: 12,
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.8),
+                        fontSize: 12,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: Colors.white.withOpacity(0.8),
-              size: 16,
-            ),
-          ],
+              Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.white.withOpacity(0.8),
+                size: 16,
+              ),
+            ],
+          ),
         ),
       ),
     );

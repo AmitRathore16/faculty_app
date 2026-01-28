@@ -9,8 +9,13 @@ class Educator extends User {
   final Rating? rating;
   final int followerCount;
   final String? status;
+
+  /// ✅ backend: introVideo OR introVideoLink
   final String? introVideoLink;
-  
+
+  /// ✅ backend: introVideoVimeoUri
+  final String? introVideoVimeoUri;
+
   Educator({
     required super.id,
     super.name,
@@ -32,39 +37,60 @@ class Educator extends User {
     this.followerCount = 0,
     this.status,
     this.introVideoLink,
+    this.introVideoVimeoUri,
   }) : super(role: 'educator');
-  
+
+  /// ✅ single source of truth for active status (UI should use this)
+  bool get isActive {
+    final s = (status ?? '').toLowerCase().trim();
+    return s == 'active';
+  }
+
+  /// ✅ best link chooser
+  /// priority: direct introVideoLink -> vimeo uri
+  String? get introVideoBestLink {
+    final a = (introVideoLink ?? '').trim();
+    if (a.isNotEmpty) return a;
+
+    final b = (introVideoVimeoUri ?? '').trim();
+    if (b.isNotEmpty) return b;
+
+    return null;
+  }
+
   String get displaySubjects {
     if (subject.isEmpty) return 'Not specified';
     return subject.map((s) => _formatSubject(s)).join(', ');
   }
-  
+
   String _formatSubject(String value) {
-    return value.replaceAll('-', ' ').split(' ')
-        .map((word) => word.isNotEmpty 
-            ? '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}'
-            : word)
+    return value
+        .replaceAll('-', ' ')
+        .split(' ')
+        .map((word) => word.isNotEmpty
+        ? '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}'
+        : word)
         .join(' ');
   }
-  
+
   String get displayExperience {
     if (yearsOfExperience != null) {
       return '$yearsOfExperience+ years';
     }
     return 'Not specified';
   }
-  
+
   String? get displayQualification {
     if (qualifications.isNotEmpty) {
       return qualifications.first.title ?? qualifications.first.degree;
     }
     return null;
   }
-  
+
   factory Educator.fromJson(Map<String, dynamic> json) {
     return Educator(
       id: json['_id'] ?? json['id'] ?? '',
-      name: json['name'] ?? json['fullName'],
+      name: json['fullName'] ?? json['name'],
       firstName: json['firstName'],
       lastName: json['lastName'],
       email: json['email'] ?? '',
@@ -72,27 +98,43 @@ class Educator extends User {
       username: json['username'],
       image: _parseImage(json),
       bio: json['bio'] ?? json['description'],
-      joinedAt: json['joinedAt'] != null ? DateTime.tryParse(json['joinedAt']) : null,
-      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt']) : null,
+      joinedAt: json['joinedAt'] != null
+          ? DateTime.tryParse(json['joinedAt'].toString())
+          : null,
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'].toString())
+          : null,
       subject: _parseStringList(json['subject']),
       specialization: _parseStringList(json['specialization']),
       qualifications: (json['qualification'] as List<dynamic>?)
-          ?.map((e) => Qualification.fromJson(e is String ? {'title': e} : e))
-          .toList() ?? 
+          ?.map((e) =>
+          Qualification.fromJson(Map<String, dynamic>.from(e)))
+          .toList() ??
           (json['qualifications'] as List<dynamic>?)
-          ?.map((e) => Qualification.fromJson(e is String ? {'title': e} : e))
-          .toList() ?? [],
+              ?.map((e) =>
+              Qualification.fromJson(Map<String, dynamic>.from(e)))
+              .toList() ??
+          [],
       workExperience: (json['workExperience'] as List<dynamic>?)
-          ?.map((e) => WorkExperience.fromJson(e))
-          .toList() ?? [],
-      yearsOfExperience: json['yoe'] ?? json['yearsExperience'] ?? json['experience'],
-      rating: json['rating'] != null ? Rating.fromJson(json['rating']) : null,
+          ?.map((e) =>
+          WorkExperience.fromJson(Map<String, dynamic>.from(e)))
+          .toList() ??
+          [],
+      yearsOfExperience: (json['yoe'] as num?)?.toInt() ??
+          (json['yearsExperience'] as num?)?.toInt() ??
+          (json['experience'] as num?)?.toInt(),
+      rating: json['rating'] != null
+          ? Rating.fromJson(Map<String, dynamic>.from(json['rating']))
+          : null,
       followerCount: _parseFollowerCount(json),
       status: json['status'],
-      introVideoLink: json['introVideoLink'],
+
+      /// ✅ parse both
+      introVideoLink: json['introVideoLink'] ?? json['introVideo'],
+      introVideoVimeoUri: json['introVideoVimeoUri'],
     );
   }
-  
+
   static UserImage? _parseImage(Map<String, dynamic> json) {
     if (json['profileImage'] != null) {
       return UserImage.fromJson(json['profileImage']);
@@ -105,7 +147,7 @@ class Educator extends User {
     }
     return null;
   }
-  
+
   static List<String> _parseStringList(dynamic value) {
     if (value == null) return [];
     if (value is String) return [value];
@@ -114,13 +156,13 @@ class Educator extends User {
     }
     return [];
   }
-  
+
   static int _parseFollowerCount(Map<String, dynamic> json) {
     if (json['followerCount'] is int) return json['followerCount'];
     if (json['followers'] is List) return (json['followers'] as List).length;
     return 0;
   }
-  
+
   @override
   Map<String, dynamic> toJson() {
     return {
@@ -133,7 +175,10 @@ class Educator extends User {
       'rating': rating?.toJson(),
       'followerCount': followerCount,
       'status': status,
+
+      /// ✅ include both
       'introVideoLink': introVideoLink,
+      'introVideoVimeoUri': introVideoVimeoUri,
     };
   }
 }
@@ -143,18 +188,23 @@ class Qualification {
   final String? degree;
   final String? institution;
   final String? year;
-  
+
   Qualification({this.title, this.degree, this.institution, this.year});
-  
+
   factory Qualification.fromJson(Map<String, dynamic> json) {
     return Qualification(
       title: json['title'],
       degree: json['degree'],
-      institution: json['institution'],
-      year: json['year']?.toString(),
+      institution: json['institution'] ?? json['institute'],
+      year: json['year']?.toString() ??
+          (json['endDate'] != null
+              ? DateTime.tryParse(json['endDate'].toString())
+              ?.year
+              .toString()
+              : null),
     );
   }
-  
+
   Map<String, dynamic> toJson() {
     return {
       'title': title,
@@ -170,9 +220,9 @@ class WorkExperience {
   final String? company;
   final String? duration;
   final String? description;
-  
+
   WorkExperience({this.title, this.company, this.duration, this.description});
-  
+
   factory WorkExperience.fromJson(Map<String, dynamic> json) {
     return WorkExperience(
       title: json['title'],
@@ -181,7 +231,7 @@ class WorkExperience {
       description: json['description'],
     );
   }
-  
+
   Map<String, dynamic> toJson() {
     return {
       'title': title,
@@ -195,16 +245,16 @@ class WorkExperience {
 class Rating {
   final double? average;
   final int? count;
-  
+
   Rating({this.average, this.count});
-  
+
   factory Rating.fromJson(Map<String, dynamic> json) {
     return Rating(
       average: (json['average'] as num?)?.toDouble(),
       count: json['count'] as int?,
     );
   }
-  
+
   Map<String, dynamic> toJson() {
     return {
       'average': average,

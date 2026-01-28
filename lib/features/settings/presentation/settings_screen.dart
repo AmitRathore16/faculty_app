@@ -5,6 +5,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/services/biometric_service.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/utils/snackbar_utils.dart';
+import '../../../core/services/storage_service.dart';
+import '../../../core/services/storage_keys.dart';
 import '../../auth/providers/auth_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -15,27 +17,38 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  bool _biometricEnabled = false;
   bool _notificationsEnabled = true;
-  bool _offlineModeEnabled = false;
 
   @override
   void initState() {
     super.initState();
-    _checkBiometricAvailability();
+    _initBiometricSettings();
   }
 
-  Future<void> _checkBiometricAvailability() async {
+  Future<void> _initBiometricSettings() async {
+    // 1) Device biometric availability
     final isAvailable = await BiometricService.isAvailable();
+
+    // 2) User preference stored
+    final savedEnabled =
+        StorageService.getBool(StorageKeys.biometricEnabled) ?? false;
+
+    if (!mounted) return;
+
     setState(() {
-      _biometricEnabled = isAvailable;
+
     });
+
+    // Optional cleanup: if device no longer supports, reset stored pref
+    if (!isAvailable && savedEnabled == true) {
+      await StorageService.setBool(StorageKeys.biometricEnabled, false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
@@ -59,87 +72,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ]),
           const SizedBox(height: 24),
-          
+
           // Security Section
           _buildSectionHeader('Security'),
           _buildCard([
-            _buildSwitchTile(
-              icon: Icons.fingerprint,
-              title: 'Biometric Login',
-              subtitle: 'Use fingerprint or face ID',
-              value: _biometricEnabled,
-              onChanged: (value) async {
-                if (value) {
-                  final authenticated = await BiometricService.authenticate(
-                    reason: 'Authenticate to enable biometric login',
-                  );
-                  if (authenticated) {
-                    setState(() => _biometricEnabled = true);
-                    if (mounted) {
-                      AppSnackbar.success(context, 'Biometric login enabled');
-                    }
-                  }
-                } else {
-                  setState(() => _biometricEnabled = false);
-                }
-              },
-            ),
-            const Divider(height: 1),
             _buildNavigationTile(
               icon: Icons.lock_outline,
               title: 'Change Password',
               onTap: () {
-                // TODO: Navigate to change password
+                context.push('/change-password');
               },
             ),
           ]),
           const SizedBox(height: 24),
-          
+
           // Notifications Section
-          _buildSectionHeader('Notifications'),
-          _buildCard([
-            _buildSwitchTile(
-              icon: Icons.notifications_outlined,
-              title: 'Push Notifications',
-              subtitle: 'Receive updates and reminders',
-              value: _notificationsEnabled,
-              onChanged: (value) {
-                setState(() => _notificationsEnabled = value);
-              },
-            ),
-          ]),
-          const SizedBox(height: 24),
-          
-          // Data & Storage Section
-          _buildSectionHeader('Data & Storage'),
-          _buildCard([
-            _buildSwitchTile(
-              icon: Icons.offline_bolt_outlined,
-              title: 'Offline Mode',
-              subtitle: 'Download content for offline access',
-              value: _offlineModeEnabled,
-              onChanged: (value) {
-                setState(() => _offlineModeEnabled = value);
-              },
-            ),
-            const Divider(height: 1),
-            _buildNavigationTile(
-              icon: Icons.delete_outline,
-              title: 'Clear Cache',
-              subtitle: 'Free up storage space',
-              onTap: () async {
-                final confirm = await _showConfirmDialog(
-                  'Clear Cache',
-                  'This will delete all cached data. Continue?',
-                );
-                if (confirm && mounted) {
-                  AppSnackbar.success(context, 'Cache cleared');
-                }
-              },
-            ),
-          ]),
-          const SizedBox(height: 24),
-          
+          // _buildSectionHeader('Notifications'),
+          // _buildCard([
+          //   _buildSwitchTile(
+          //     icon: Icons.notifications_outlined,
+          //     title: 'Push Notifications',
+          //     subtitle: 'Receive updates and reminders',
+          //     value: _notificationsEnabled,
+          //     onChanged: (value) {
+          //       setState(() => _notificationsEnabled = value);
+          //     },
+          //   ),
+          // ]),
+          // const SizedBox(height: 24),
+
           // About Section
           _buildSectionHeader('About'),
           _buildCard([
@@ -165,7 +126,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ]),
           const SizedBox(height: 24),
-          
+
           // Logout
           _buildCard([
             _buildNavigationTile(

@@ -17,7 +17,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     final String location = GoRouterState.of(context).matchedLocation;
     if (location.startsWith('/home')) return 0;
     if (location.startsWith('/exams')) return 1;
-    if (location.startsWith('/educators')) return 2;
+    if (location.startsWith('/messages')) return 2;
     if (location.startsWith('/profile')) return 3;
     return 0;
   }
@@ -31,7 +31,7 @@ class _MainShellState extends ConsumerState<MainShell> {
         context.go('/exams');
         break;
       case 2:
-        context.go('/educators');
+        context.go('/messages');
         break;
       case 3:
         context.go('/profile');
@@ -81,9 +81,9 @@ class _MainShellState extends ConsumerState<MainShell> {
               label: 'Exams',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.people_outline),
-              activeIcon: Icon(Icons.people),
-              label: 'Educators',
+              icon: Icon(Icons.chat_bubble_outline),
+              activeIcon: Icon(Icons.chat_bubble),
+              label: 'Messages',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline),

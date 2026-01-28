@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:faculty_pedia/features/messages/services/chat_socket_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/config/app_config.dart';
@@ -73,6 +74,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
           isLoading: false,
           user: user,
         );
+        await ChatSocketService.instance.connect();
+
       } else {
         state = state.copyWith(isAuthenticated: false, isLoading: false);
       }
@@ -106,7 +109,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (userData == null) throw Exception('No user data received');
 
       await StorageService.setSecure(AppConfig.authTokenKey, token);
-      await StorageService.setString(AppConfig.userDataKey, json.encode(userData));
+      await StorageService.setString(
+          AppConfig.userDataKey, json.encode(userData));
       await StorageService.setString(AppConfig.userRoleKey, 'student');
 
       final user = Student.fromJson(userData);
@@ -116,6 +120,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isLoading: false,
         user: user,
       );
+      await ChatSocketService.instance.connect();
 
       return true;
     } catch (e) {
@@ -169,7 +174,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-
   /// =======================
   /// SIGNUP (STUDENT ONLY)
   /// =======================
@@ -219,7 +223,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       if (token != null && userData != null) {
         await StorageService.setSecure(AppConfig.authTokenKey, token);
-        await StorageService.setString(AppConfig.userDataKey, json.encode(userData));
+        await StorageService.setString(
+            AppConfig.userDataKey, json.encode(userData));
         await StorageService.setString(AppConfig.userRoleKey, 'student');
 
         final user = Student.fromJson(userData);
@@ -246,7 +251,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       await _apiService.post(
         '/api/auth/forgot-password',
-        data: {'email': email.trim()},
+        data: {'email': email.trim(), 'userType': "student"},
       );
       state = state.copyWith(isLoading: false);
       return true;

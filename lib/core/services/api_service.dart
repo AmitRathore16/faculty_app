@@ -30,23 +30,56 @@ class ApiService {
         onRequest: (options, handler) async {
           // Add auth token if available
           final token = await StorageService.getSecure(AppConfig.authTokenKey);
+
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
           }
+
           return handler.next(options);
         },
         onResponse: (response, handler) {
           return handler.next(response);
         },
+        // onError: (error, handler) async {
+        //   if (error.response?.statusCode == 401) {
+        //     // Token expired - clear auth data
+        //     await StorageService.deleteSecure(AppConfig.authTokenKey);
+        //     await StorageService.remove(AppConfig.userDataKey);
+        //     await StorageService.remove(AppConfig.userRoleKey);
+        //   }
+        //   return handler.next(error);
+        // },
         onError: (error, handler) async {
-          if (error.response?.statusCode == 401) {
-            // Token expired - clear auth data
-            await StorageService.deleteSecure(AppConfig.authTokenKey);
-            await StorageService.remove(AppConfig.userDataKey);
-            await StorageService.remove(AppConfig.userRoleKey);
+          final status = error.response?.statusCode;
+
+          // ✅ only logout on 401 for protected endpoints
+          if (status == 401) {
+            final path = error.requestOptions.path;
+
+            // ❌ do NOT logout for these
+            final ignorePaths = [
+              '/api/auth/login-student',
+              '/api/auth/signup-student',
+              '/api/auth/forgot-password',
+            ];
+
+            final shouldIgnore = ignorePaths.any((p) => path.contains(p));
+
+            if (!shouldIgnore) {
+              // ✅ only logout if token exists but still 401
+              final token = await StorageService.getSecure(AppConfig.authTokenKey);
+
+              if (token != null && token.isNotEmpty) {
+                await StorageService.deleteSecure(AppConfig.authTokenKey);
+                await StorageService.remove(AppConfig.userDataKey);
+                await StorageService.remove(AppConfig.userRoleKey);
+              }
+            }
           }
+
           return handler.next(error);
         },
+
       ),
     );
     

@@ -1,3 +1,5 @@
+import 'package:faculty_pedia/shared/models/test_series_model.dart';
+
 import 'user_model.dart';
 
 class Student extends User {
@@ -7,7 +9,8 @@ class Student extends User {
   final List<String> followingEducators;
   final List<StudentTest> tests;
   final List<TestResult> results;
-  
+  final List<TestSeries> testSeries;
+
   Student({
     required super.id,
     super.name,
@@ -26,6 +29,7 @@ class Student extends User {
     this.followingEducators = const [],
     this.tests = const [],
     this.results = const [],
+    this.testSeries = const [],
   }) : super(role: 'student');
   
   factory Student.fromJson(Map<String, dynamic> json) {
@@ -47,14 +51,62 @@ class Student extends User {
           ?.map((e) => EnrolledCourse.fromJson(e))
           .toList() ?? [],
       followingEducators: (json['followingEducators'] as List<dynamic>?)
-          ?.map((e) => e is String ? e : e['_id']?.toString() ?? '')
-          .where((e) => e.isNotEmpty)
-          .toList() ?? [],
+          ?.map((e) {
+        // Case 1: backend sends direct string ids
+        if (e is String) return e.toString();
+
+        // Case 2: backend sends object { educatorId, followedAt }
+        if (e is Map) {
+          final educatorId = e['educatorId'];
+
+          // educatorId could be string OR object {_id: ...}
+          if (educatorId is String) return educatorId.trim();
+          if (educatorId is Map && educatorId['_id'] != null) {
+            return educatorId['_id'].toString().trim();
+          }
+        }
+
+        return '';
+      })
+          .where((id) => id.trim().isNotEmpty)
+          .toList() ??
+          [],
+
       tests: (json['tests'] as List<dynamic>?)
           ?.map((e) => StudentTest.fromJson(e))
           .toList() ?? [],
+      testSeries: (json['testSeries'] as List<dynamic>?)
+          ?.map((e) {
+        // backend format: { testSeriesId: ... }
+        if (e is Map && e['testSeriesId'] != null) {
+          final ts = e['testSeriesId'];
+
+          // case 1: testSeriesId is string id
+          if (ts is String) {
+            return TestSeries(id: ts, title: "");
+          }
+
+          // case 2: populated testSeries object
+          if (ts is Map) {
+            final map = Map<String, dynamic>.from(ts);
+            return TestSeries.fromJson(map);
+          }
+        }
+
+        // fallback: sometimes backend might already send populated object
+        if (e is Map) {
+          return TestSeries.fromJson(Map<String, dynamic>.from(e));
+        }
+
+        // fallback empty
+        return TestSeries(id: "", title: "");
+      })
+          .where((t) => t.id.trim().isNotEmpty)
+          .toList() ??
+          [],
+
       results: (json['results'] as List<dynamic>?)
-          ?.map((e) => TestResult.fromJson(e))
+          ?.map((e) => TestResult.fromJson(Map<String, dynamic>.from(e)))
           .toList() ?? [],
     );
   }
@@ -69,6 +121,8 @@ class Student extends User {
       'followingEducators': followingEducators,
       'tests': tests.map((t) => t.toJson()).toList(),
       'results': results.map((r) => r.toJson()).toList(),
+      'testSeries': testSeries.map((t) => t.toJson()).toList(),
+
     };
   }
 }
@@ -152,9 +206,10 @@ class TestResult {
   final int? totalMarks;
   final int? correctAnswers;
   final int? wrongAnswers;
+  final String? title;
   final int? unattempted;
   final DateTime? submittedAt;
-  final DateTime? createdAt;
+  final DateTime? completedAt;
   
   TestResult({
     required this.id,
@@ -164,9 +219,10 @@ class TestResult {
     this.totalMarks,
     this.correctAnswers,
     this.wrongAnswers,
+    this.title,
     this.unattempted,
     this.submittedAt,
-    this.createdAt,
+    this.completedAt,
   });
   
   double get percentage {
@@ -179,6 +235,7 @@ class TestResult {
       id: json['_id'] ?? json['id'] ?? '',
       testId: json['testId']?.toString(),
       seriesId: json['seriesId']?.toString(),
+      title: json['title'],
       score: json['score'] as int?,
       totalMarks: json['totalMarks'] as int?,
       correctAnswers: json['correctAnswers'] as int?,
@@ -187,9 +244,10 @@ class TestResult {
       submittedAt: json['submittedAt'] != null 
           ? DateTime.tryParse(json['submittedAt']) 
           : null,
-      createdAt: json['createdAt'] != null 
-          ? DateTime.tryParse(json['createdAt']) 
+      completedAt: json['completedAt'] != null
+          ? DateTime.tryParse(json['completedAt'].toString())
           : null,
+
     );
   }
   
@@ -201,10 +259,11 @@ class TestResult {
       'score': score,
       'totalMarks': totalMarks,
       'correctAnswers': correctAnswers,
+      'title': title,
       'wrongAnswers': wrongAnswers,
       'unattempted': unattempted,
       'submittedAt': submittedAt?.toIso8601String(),
-      'createdAt': createdAt?.toIso8601String(),
+      'completedAt': completedAt?.toIso8601String(),
     };
   }
 }

@@ -1,3 +1,12 @@
+import 'package:faculty_pedia/features/home/presentation/notifications_screen.dart';
+import 'package:faculty_pedia/features/messages/presentation/messages_home_screen.dart';
+import 'package:faculty_pedia/features/messages/presentation/new_chat_screen.dart';
+import 'package:faculty_pedia/features/messages/presentation/student_chat_screen.dart';
+import 'package:faculty_pedia/features/profile/presentation/following_educators_screen.dart';
+import 'package:faculty_pedia/features/profile/presentation/my_test_results_screen.dart';
+import 'package:faculty_pedia/features/profile/presentation/test_result_details_screen.dart';
+import 'package:faculty_pedia/features/settings/presentation/change_passord_screen.dart';
+import 'package:faculty_pedia/shared/models/student_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,7 +20,6 @@ import '../../features/home/presentation/main_shell.dart';
 import '../../features/educators/presentation/educators_screen.dart';
 import '../../features/educators/presentation/educator_profile_screen.dart';
 import '../../features/courses/presentation/courses_screen.dart';
-import '../../features/courses/presentation/course_details_screen.dart';
 import '../../features/exams/presentation/exams_screen.dart';
 import '../../features/exams/presentation/exam_details_screen.dart';
 import '../../features/test_series/presentation/test_series_screen.dart';
@@ -24,7 +32,9 @@ import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
-
+import '../../features/courses/presentation/enhanced_course_details_screen.dart';
+import '../../features/courses/presentation/my_courses_screen.dart';
+import '../../features/courses/presentation/course_content_screen.dart';
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
 
@@ -90,9 +100,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ),
           ),
           GoRoute(
-            path: '/educators',
+            path: '/messages',
             pageBuilder: (context, state) => const NoTransitionPage(
-              child: EducatorsScreen(),
+              child: MessagesHomeScreen(),
             ),
           ),
           GoRoute(
@@ -111,15 +121,62 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           educatorId: state.pathParameters['id']!,
         ),
       ),
-      
       // Courses
       GoRoute(
         path: '/courses',
         builder: (context, state) => const CoursesScreen(),
       ),
       GoRoute(
+        path: '/following-educators',
+        builder: (context, state) => const FollowingEducatorsScreen(),
+      ),
+      GoRoute(
+        path: '/change-password',
+        builder: (context, state) => const ChangePasswordScreen(),
+      ),
+      GoRoute(
+        path: '/chat/new',
+        builder: (context, state) => const NewChatScreen(),
+      ),
+
+      GoRoute(
+        path: '/chat/:id',
+        builder: (context, state) {
+          final extra = (state.extra is Map) ? (state.extra as Map) : {};
+
+          final receiverId = (extra['receiverId'] ?? '').toString();
+          final receiverType = (extra['receiverType'] ?? '').toString();
+
+          if (receiverId.isEmpty || receiverType.isEmpty) {
+            return const Scaffold(
+              body: Center(
+                child: Text("Invalid chat open: receiver not found"),
+              ),
+            );
+          }
+
+          return StudentChatScreen(
+            conversationId: state.pathParameters['id']!,
+            title: extra['title'] as String?,
+            receiverId: receiverId,
+            receiverType: receiverType,
+          );
+        },
+      ),
+
+      GoRoute(
         path: '/course/:id',
-        builder: (context, state) => CourseDetailsScreen(
+        builder: (context, state) => EnhancedCourseDetailsScreen(
+          courseId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/my-courses',
+        builder: (context, state) => const MyCoursesScreen(),
+      ),
+      GoRoute(
+        path: '/course-content/:id',
+        builder: (context, state) => CourseContentScreen(
           courseId: state.pathParameters['id']!,
         ),
       ),
@@ -152,6 +209,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: '/my-test-results',
+        builder: (context, state) => const MyTestResultsScreen(),
+      ),
+      GoRoute(
+        path: '/my-test-results/details',
+        builder: (context, state) {
+          final r = state.extra as TestResult;
+          return TestResultDetailsScreen(result: r);
+        },
+      ),
+      GoRoute(
         path: '/test-result/:id',
         builder: (context, state) => TestResultScreen(
           resultId: state.pathParameters['id']!,
@@ -175,7 +243,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/edit-profile',
         builder: (context, state) => const EditProfileScreen(),
       ),
-      
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationsScreen(),
+      ),
+
+      GoRoute(
+        path: '/educators',
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: EducatorsScreen(),
+        ),
+      ),
+
       // Settings
       GoRoute(
         path: '/settings',

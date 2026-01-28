@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "178915421920",
+    "project_id": "faculty-pedia-d7385",
+    "storage_bucket": "faculty-pedia-d7385.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:178915421920:android:d67387bf8dee1c3259ea85",
+        "android_client_info": {
+          "package_name": "com.facultypedia.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD016PTNJ6Ot8C3nIJsYdFihJbk-_Yy8wg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

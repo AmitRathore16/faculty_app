@@ -7,8 +7,26 @@ class Course {
   final String? slug;
   final CourseImage? image;
   final List<String> subject;
+  final List<String> classList;
+  final String? courseDuration;
+  final String? introVideoVimeoUri; // ✅ NEW
   final List<String> specialization;
   final EducatorInfo? educator;
+  final String? introVideo;
+  final String? language;
+  final bool? certificateAvailable;
+  final double? rating;
+  final int? ratingCount;
+  final List<CourseVideo>? videos;
+  final List<StudyMaterial>? studyMaterials;
+  final List<String>? courseObjectives;
+  final List<String>? prerequisites;
+  final int? videoCount;
+  final int? liveClassCount;
+  final int? testSeriesCount;
+  final bool? isFull;
+  final int? seatsAvailable;
+  final List<String>? enrolledStudents;
   final double? fees;
   final double? discount;
   final DateTime? startDate;
@@ -18,14 +36,30 @@ class Course {
   final String? status;
   final bool? isActive;
   final DateTime? createdAt;
-  final List<CourseClass>? classes;
-  
+
   Course({
     required this.id,
     required this.title,
     this.description,
     this.slug,
     this.image,
+    this.classList = const [],
+    this.courseDuration,
+    this.introVideo,
+    this.language,
+    this.certificateAvailable,
+    this.rating,
+    this.ratingCount,
+    this.videos,
+    this.studyMaterials,
+    this.courseObjectives,
+    this.prerequisites,
+    this.videoCount,
+    this.liveClassCount,
+    this.testSeriesCount,
+    this.isFull,
+    this.seatsAvailable,
+    this.enrolledStudents,
     this.subject = const [],
     this.specialization = const [],
     this.educator,
@@ -37,12 +71,21 @@ class Course {
     this.enrolledCount,
     this.status,
     this.isActive,
+    this.introVideoVimeoUri,
     this.createdAt,
-    this.classes,
   });
   
   String get imageUrl => image?.url ?? '';
-  
+  String? get introVideoBestLink {
+    final a = (introVideo ?? '').trim();
+    if (a.isNotEmpty) return a;
+
+    final b = (introVideoVimeoUri ?? '').trim();
+    if (b.isNotEmpty) return b;
+
+    return null;
+  }
+
   double get finalPrice {
     if (fees == null) return 0;
     if (discount == null || discount == 0) return fees!;
@@ -57,6 +100,8 @@ class Course {
       title: json['title'] ?? '',
       description: json['description'],
       slug: json['slug'],
+      classList: _parseStringList(json['class']),
+      courseDuration: json['courseDuration'],
       image: _parseImage(json),
       subject: _parseStringList(json['subject']),
       specialization: _parseStringList(json['specialization']),
@@ -66,26 +111,61 @@ class Course {
       startDate: json['startDate'] != null ? DateTime.tryParse(json['startDate']) : null,
       endDate: json['endDate'] != null ? DateTime.tryParse(json['endDate']) : null,
       maxStudents: json['maxStudents'] ?? json['seatLimit'],
-      enrolledCount: json['enrolledCount'] ?? json['enrolledStudents'],
+      enrolledCount: json['enrolledCount'] ?? (json['enrolledStudents'] is List ? (json['enrolledStudents'] as List).length : null),
       status: json['status'],
       isActive: json['isActive'],
       createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt']) : null,
-      classes: (json['classes'] as List<dynamic>?)
-          ?.map((e) => CourseClass.fromJson(e))
-          .toList(),
+      introVideo: json['introVideo'],
+      introVideoVimeoUri: json['introVideoVimeoUri'], // ✅ NEW
+      language: json['language'],
+      certificateAvailable: json['certificateAvailable'],
+      rating: (json['rating'] as num?)?.toDouble(),
+      ratingCount: json['ratingCount'],
+      videos: (json['videos'] as List<dynamic>?)?.map((e) => CourseVideo.fromJson(e)).toList(),
+      studyMaterials: (json['studyMaterials'] as List<dynamic>?)?.map((e) => StudyMaterial.fromJson(e)).toList(),
+      courseObjectives: _parseStringList(json['courseObjectives']),
+      prerequisites: _parseStringList(json['prerequisites']),
+      videoCount: json['videoCount'],
+      liveClassCount: json['liveClassCount'],
+      testSeriesCount: json['testSeriesCount'],
+      isFull: json['isFull'],
+      seatsAvailable: json['seatsAvailable'],
+      enrolledStudents: _parseIdList(json['enrolledStudents']),
     );
   }
-  
+
   static CourseImage? _parseImage(Map<String, dynamic> json) {
-    if (json['image'] != null) {
-      return CourseImage.fromJson(json['image']);
+    final img = json['courseThumbnail'] ?? json['image'];
+    if (img == null) return null;
+
+    if (img is String) {
+      return CourseImage(url: img);
     }
-    if (json['courseThumbnail'] != null) {
-      return CourseImage.fromJson(json['courseThumbnail']);
+    if (img is Map<String, dynamic>) {
+      return CourseImage.fromJson(img);
     }
     return null;
   }
-  
+  static List<String> _parseIdList(dynamic value) {
+    if (value == null) return [];
+
+    if (value is List) {
+      return value
+          .map((e) {
+        if (e is String) return e;
+        if (e is Map<String, dynamic>) {
+          return (e['_id'] ?? e['id'] ?? '').toString();
+        }
+        return e.toString();
+      })
+          .where((id) => id.isNotEmpty)
+          .toList();
+    }
+
+    return [];
+  }
+
+
   static List<String> _parseStringList(dynamic value) {
     if (value == null) return [];
     if (value is String) return [value];
@@ -129,6 +209,8 @@ class Course {
       'enrolledCount': enrolledCount,
       'status': status,
       'isActive': isActive,
+      'introVideo': introVideo,
+      'introVideoVimeoUri': introVideoVimeoUri, // ✅ NEW
       'createdAt': createdAt?.toIso8601String(),
     };
   }
@@ -197,7 +279,7 @@ class CourseClass {
   final DateTime? scheduledAt;
   final int? duration;
   final String? status;
-  
+
   CourseClass({
     this.id,
     this.title,
@@ -206,20 +288,20 @@ class CourseClass {
     this.duration,
     this.status,
   });
-  
+
   factory CourseClass.fromJson(Map<String, dynamic> json) {
     return CourseClass(
       id: json['_id'] ?? json['id'],
       title: json['title'],
       description: json['description'],
-      scheduledAt: json['scheduledAt'] != null 
-          ? DateTime.tryParse(json['scheduledAt']) 
+      scheduledAt: json['scheduledAt'] != null
+          ? DateTime.tryParse(json['scheduledAt'])
           : null,
       duration: json['duration'],
       status: json['status'],
     );
   }
-  
+
   Map<String, dynamic> toJson() {
     return {
       '_id': id,
@@ -231,3 +313,73 @@ class CourseClass {
     };
   }
 }
+
+class CourseVideo {
+  final String? id;
+  final String? title;
+  final String? link;
+  final String? duration;
+  final int? sequenceNumber;
+
+  CourseVideo({
+    this.id,
+    this.title,
+    this.link,
+    this.duration,
+    this.sequenceNumber,
+  });
+
+  factory CourseVideo.fromJson(Map<String, dynamic> json) {
+    return CourseVideo(
+      id: json['_id'] ?? json['id'],
+      title: json['title'],
+      link: json['link'],
+      duration: json['duration'],
+      sequenceNumber: json['sequenceNumber'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'title': title,
+      'link': link,
+      'duration': duration,
+      'sequenceNumber': sequenceNumber,
+    };
+  }
+}
+
+class StudyMaterial {
+  final String? id;
+  final String? title;
+  final String? link;
+  final String? fileType;
+
+  StudyMaterial({
+    this.id,
+    this.title,
+    this.link,
+    this.fileType,
+  });
+
+  factory StudyMaterial.fromJson(Map<String, dynamic> json) {
+    return StudyMaterial(
+      id: json['_id'] ?? json['id'],
+      title: json['title'],
+      link: json['link'],
+      fileType: json['fileType'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'title': title,
+      'link': link,
+      'fileType': fileType,
+    };
+  }
+}
+
+

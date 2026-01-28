@@ -1,9 +1,10 @@
+import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter/services.dart';
 
 class BiometricService {
   static final LocalAuthentication _auth = LocalAuthentication();
-  
+
   static Future<bool> isAvailable() async {
     try {
       final isAvailable = await _auth.canCheckBiometrics;
@@ -13,15 +14,15 @@ class BiometricService {
       return false;
     }
   }
-  
+
   static Future<List<BiometricType>> getAvailableBiometrics() async {
     try {
       return await _auth.getAvailableBiometrics();
-    } on PlatformException {
+    } catch (e) {
       return [];
     }
   }
-  
+
   static Future<bool> authenticate({
     String reason = 'Please authenticate to continue',
   }) async {
@@ -37,10 +38,12 @@ class BiometricService {
       if (e.code == 'NotAvailable' || e.code == 'NotEnrolled') {
         return false;
       }
-      rethrow;
+      return false;
+    } catch (e) {
+      return false;
     }
   }
-  
+
   static Future<bool> authenticateBiometricOnly({
     String reason = 'Please use biometric authentication',
   }) async {
@@ -52,7 +55,10 @@ class BiometricService {
           biometricOnly: true,
         ),
       );
-    } on PlatformException {
+    } on PlatformException catch(e) {
+      debugPrint('Biometric failed: ${e.code} - ${e.message}');
+      return false;
+    } catch (e) {
       return false;
     }
   }
